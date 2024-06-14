@@ -753,12 +753,9 @@ class BackingCollections {
                     return new TwoElementSet<>(this.flat[0], this.flat[1]);
                 } else {
                     E[] flat = this.flat;
-                    int [] indices = this.indices;
                     if (size != flat.length) {
                         flat = createEArray(size);
                         System.arraycopy(this.flat, 0, flat, 0, size);
-                        indices = new int[size];
-                        System.arraycopy(this.indices, 0, indices, 0, size);
                     }
                     return new HashArrayBackedSet<>(tableSize, size, table, indices, flat);
                 }

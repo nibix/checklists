@@ -7,6 +7,19 @@ whether your check list or check table is complete - and when not, what is missi
 
 A check list is a one-dimensional list, a check table is a two-dimensional matrix.
 
+One typical use case for these data structures are complex access control rules. You can use
+a check table to tick off what privileges are present and which are not present. The tabular
+`toString()` representation helps quickly identifying what privileges are missing:
+
+```
+          | indices:data/read/search |
+ index_a11| ok                       |
+ index_a12| MISSING                  |
+ index_a13| MISSING                  |
+ index_a14| MISSING                  |
+```
+ 
+
 ## License
 
 This code is licensed under the Apache 2.0 License.
