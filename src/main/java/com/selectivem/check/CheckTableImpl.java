@@ -679,11 +679,6 @@ public class CheckTableImpl {
             this.rows = CheckListImpl.create(rows, "row");
         }
 
-        SingleColumnCheckTable(CheckList<R> rows, C column) {
-            this.column = column;
-            this.rows = rows;
-        }
-
         @Override
         public boolean check(R row, C column) {
             if (!column.equals(this.column)) {
@@ -922,7 +917,7 @@ public class CheckTableImpl {
         private final BackingCollections.IndexedUnmodifiableSet<R> rows;
         private final BackingCollections.IndexedUnmodifiableSet<C> columns;
 
-        private boolean[] table;
+        private final boolean[] table;
         private int checkedCount = 0;
         private int uncheckedCount;
         private final int size;

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2024 Nils Bandener
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Based on code which is:
- * 
+ *
  * Copyright 2022-2024 floragunn GmbH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -54,8 +54,8 @@ import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({ BackingCollectionsTest.IndexedImmutableSet.RandomizedTestBig.class,
-        BackingCollectionsTest.IndexedImmutableSet.ImmutableSetRandomizedTestSmall.class })
+@Suite.SuiteClasses({BackingCollectionsTest.IndexedImmutableSet.RandomizedTestBig.class,
+        BackingCollectionsTest.IndexedImmutableSet.ImmutableSetRandomizedTestSmall.class, BackingCollectionsTest.IndexedImmutableSet.ImmutableSetTest.class})
 public class BackingCollectionsTest {
 
     public static class IndexedImmutableSet {
@@ -86,7 +86,9 @@ public class BackingCollectionsTest {
                 HashSet<String> addedInRound2 = new HashSet<>();
                 HashSet<String> addedInRound3 = new HashSet<>();
 
-                for (int k = 0; k < random.nextInt(100) + 4; k++) {
+                int size = random.nextInt(100) + 4;
+
+                for (int k = 0; k < size; k++) {
                     String string = randomString(random);
 
                     reference.add(string);
@@ -130,7 +132,12 @@ public class BackingCollectionsTest {
                 HashSet<String> reference = new HashSet<>();
                 List<String> referenceList = new ArrayList<>();
 
-                for (int k = 0; k < random.nextInt(1000) + 4; k++) {
+                int size = random.nextInt(200) + 4;
+                if (random.nextFloat() < 0.1) {
+                    size += random.nextInt(800);
+                }
+
+                for (int k = 0; k < size; k++) {
                     String string = randomString(random);
 
                     if (!reference.contains(string)) {
@@ -161,20 +168,21 @@ public class BackingCollectionsTest {
                 Random random = new Random(seed);
 
                 HashSet<String> reference = new HashSet<>();
-                List<String> referenceList = new ArrayList<>();
 
-                for (int k = 0; k < random.nextInt(1000) + 4; k++) {
+                int size = random.nextInt(200) + 4;
+                if (random.nextFloat() < 0.1) {
+                    size += random.nextInt(800);
+                }
+
+                for (int k = 0; k < size; k++) {
                     String string = randomString(random);
-
-                    if (!reference.contains(string)) {
-                        reference.add(string);
-                        referenceList.add(string);
-                    }
+                    reference.add(string);
                 }
 
                 BackingCollections.IndexedUnmodifiableSet<String> subject = BackingCollections.IndexedUnmodifiableSet.of(reference);
 
                 assertEquals(reference, subject);
+                Assert.assertEquals(reference.size(), subject.size());
                 Set<String> subjectCopy = new HashSet<>(subject.size());
 
                 for (String e : subject) {
@@ -327,6 +335,24 @@ public class BackingCollectionsTest {
             }
         }
 
+        public static class ImmutableSetTest {
+            @Test
+            public void isEmpty() {
+                Assert.assertTrue(BackingCollections.IndexedUnmodifiableSet.empty().isEmpty());
+                Assert.assertTrue(BackingCollections.IndexedUnmodifiableSet.builder(10).build().isEmpty());
+                Assert.assertFalse(BackingCollections.IndexedUnmodifiableSet.of(1).isEmpty());
+                Assert.assertFalse(BackingCollections.IndexedUnmodifiableSet.of(1, 2).isEmpty());
+                Assert.assertFalse(BackingCollections.IndexedUnmodifiableSet.of(new HashSet<>(Arrays.asList(1, 2, 3, 4, 5, 7, 8, 9, 10, 11))).isEmpty());
+            }
+
+            @Test
+            public void builder_toString() {
+                BackingCollections.IndexedUnmodifiableSet.InternalBuilder<String> builder = BackingCollections.IndexedUnmodifiableSet.builder(10);
+                builder = builder.with("a").with("b").with("c");
+                Assert.assertEquals("[a, b, c]", builder.toString());
+            }
+        }
+
         static String[] ipAddresses = createRandomIpAddresses(new Random(9));
         static String[] locationNames = createRandomLocationNames(new Random(2));
 
@@ -363,12 +389,12 @@ public class BackingCollectionsTest {
         }
 
         private static String[] createRandomLocationNames(Random random) {
-            String[] p1 = new String[] { "Schön", "Schöner", "Tempel", "Friedens", "Friedrichs", "Blanken", "Rosen", "Charlotten", "Malch", "Lichten",
+            String[] p1 = new String[]{"Schön", "Schöner", "Tempel", "Friedens", "Friedrichs", "Blanken", "Rosen", "Charlotten", "Malch", "Lichten",
                     "Lichter", "Hasel", "Kreuz", "Pank", "Marien", "Adlers", "Zehlen", "Haken", "Witten", "Jungfern", "Hellers", "Finster", "Birken",
                     "Falken", "Freders", "Karls", "Grün", "Wilmers", "Heiners", "Lieben", "Marien", "Wiesen", "Biesen", "Schmachten", "Rahns",
-                    "Rangs", "Herms", "Rüders", "Wuster", "Hoppe", "Waidmanns", "Wolters", "Schmargen" };
-            String[] p2 = new String[] { "au", "ow", "berg", "feld", "felde", "tal", "thal", "höhe", "burg", "horst", "hausen", "dorf", "hof",
-                    "heide", "weide", "hain", "walde", "linde", "hagen", "eiche", "witz", "rade", "werder", "see", "fließ", "krug", "mark", "lust" };
+                    "Rangs", "Herms", "Rüders", "Wuster", "Hoppe", "Waidmanns", "Wolters", "Schmargen"};
+            String[] p2 = new String[]{"au", "ow", "berg", "feld", "felde", "tal", "thal", "höhe", "burg", "horst", "hausen", "dorf", "hof",
+                    "heide", "weide", "hain", "walde", "linde", "hagen", "eiche", "witz", "rade", "werder", "see", "fließ", "krug", "mark", "lust"};
 
             ArrayList<String> result = new ArrayList<>(p1.length * p2.length);
 

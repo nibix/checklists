@@ -152,7 +152,7 @@ class BackingCollections {
 
         @Override
         public boolean isEmpty() {
-            return this.size != 0;
+            return this.size == 0;
         }
 
         abstract int elementToIndex(Object element);
@@ -211,7 +211,6 @@ class BackingCollections {
                 }
 
                 result.append("]");
-                result.append(" ").append(size()).append(getClass());
 
                 return result.toString();
             }
@@ -602,16 +601,6 @@ class BackingCollections {
             return (E[]) new Object[size];
         }
 
-        static <E> E findFirstNonNull(E[] array) {
-            for (int i = 0; i < array.length; i++) {
-                if (array[i] != null) {
-                    return array[i];
-                }
-            }
-
-            return null;
-        }
-
         int hashPosition(Object e) {
             return hashPosition(tableSize, e);
         }
@@ -872,7 +861,6 @@ class BackingCollections {
         @Override
         public <T> T[] toArray(T[] a) {
             return elements.keySet().toArray(a);
-
         }
 
         @Override
