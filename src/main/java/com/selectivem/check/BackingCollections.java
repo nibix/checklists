@@ -494,9 +494,9 @@ class BackingCollections {
 
         private final E[] table;
         private final E[] flat;
-        private final int[] indices;
+        private final short[] indices;
 
-        HashArrayBackedSet(int tableSize, int size, E[] table, int[] indices, E[] flat) {
+        HashArrayBackedSet(int tableSize, int size, E[] table, short[] indices, E[] flat) {
             super(size);
             this.tableSize = tableSize;
             this.size = size;
@@ -658,8 +658,8 @@ class BackingCollections {
         static class Builder<E> extends IndexedUnmodifiableSet.InternalBuilder<E> {
             private E[] table;
             private E[] flat;
-            private int[] indices;
-            private int size = 0;
+            private short[] indices;
+            private short size = 0;
             private final int tableSize;
 
             public Builder(int tableSize) {
@@ -675,7 +675,7 @@ class BackingCollections {
                     int hashPosition = hashPosition(e);
                     table = createEArray(tableSize + COLLISION_HEAD_ROOM);
                     flat = createEArray(tableSize + COLLISION_HEAD_ROOM);
-                    indices = new int[tableSize + COLLISION_HEAD_ROOM];
+                    indices = new short[tableSize + COLLISION_HEAD_ROOM];
                     table[hashPosition] = e;
                     indices[hashPosition] = 0;
                     flat[0] = e;
