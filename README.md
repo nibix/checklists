@@ -18,7 +18,18 @@ a check table to tick off what privileges are present and which are not present.
  index_a13| MISSING                  |
  index_a14| MISSING                  |
 ```
- 
+
+## Maven Dependency
+
+Add this library using this Maven dependency:
+
+```
+<dependency>
+    <groupId>com.selectivem</groupId>
+    <artifactId>checklists</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
 
 ## License
 
