@@ -13,6 +13,6 @@ This code is licensed under the Apache 2.0 License.
 
 ## Copyright
 
-Copyright 2024 Nils Bandener <git@bndnr.de>
+Copyright 2024 Nils Bandener <code@selectiveminimalism.com>
 
 Based on fluent collections which is Copyright 2022 by floragunn GmbH: https://git.floragunn.com/util/fluent-collections
