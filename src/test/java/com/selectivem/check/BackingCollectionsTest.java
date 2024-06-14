@@ -35,14 +35,7 @@ package com.selectivem.check;
 
 import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.junit.Assert;
@@ -190,6 +183,48 @@ public class BackingCollectionsTest {
                 }
 
                 Assert.assertEquals(reference, subjectCopy);
+            }
+
+            @Test
+            public void elementToIndex() {
+                Random random = new Random(seed + 2);
+
+                LinkedHashMap<String, Integer> reference = new LinkedHashMap<>();
+                List<String> referenceList = new ArrayList<>();
+
+                int size = random.nextInt(200) + 4;
+                if (random.nextFloat() < 0.1) {
+                    size += random.nextInt(800);
+                }
+
+                for (int k = 0; k < size; k++) {
+                    String string = randomString(random);
+
+                    if (!reference.containsKey(string)) {
+                        reference.put(string, reference.size());
+                        referenceList.add(string);
+                    }
+                }
+
+                BackingCollections.IndexedUnmodifiableSet<String> subject = BackingCollections.IndexedUnmodifiableSet.of(reference.keySet());
+
+                assertEquals(reference.keySet(), subject);
+
+                List<String> shuffledReferenceList = new ArrayList<>(referenceList);
+                Collections.shuffle(shuffledReferenceList, random);
+
+                for (int k = 0; k < reference.size(); k++) {
+                    String string1 = referenceList.get(k);
+                    int index = subject.elementToIndex(string1);
+                    Assert.assertEquals(reference.get(string1).intValue(), index);
+                    String reverseString = subject.indexToElement(index);
+                    Assert.assertEquals(string1, reverseString);
+
+                    String string2 = string1 + "X";
+                    if (!reference.containsKey(string2)) {
+                        Assert.assertEquals(-1, subject.elementToIndex(string2));
+                    }
+                }
             }
 
             private static <E> void assertEquals(HashSet<E> expected, BackingCollections.IndexedUnmodifiableSet.InternalBuilder<E> actual) {

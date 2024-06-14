@@ -35,7 +35,6 @@
 package com.selectivem.check;
 
 import java.util.AbstractSet;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -185,7 +184,7 @@ class BackingCollections {
         static abstract class InternalBuilder<E> implements Iterable<E> {
             abstract InternalBuilder<E> with(E e);
 
-            abstract InternalBuilder<E> with(Collection<E> e);
+            abstract InternalBuilder<E> with(E [] flat, int size);
 
             abstract boolean contains(Object o);
 
@@ -563,12 +562,12 @@ class BackingCollections {
 
                 @Override
                 public boolean hasNext() {
-                    return i < HashArrayBackedSet.this.flat.length;
+                    return i < HashArrayBackedSet.this.size;
                 }
 
                 @Override
                 public E next() {
-                    if (i >= HashArrayBackedSet.this.flat.length) {
+                    if (i >= HashArrayBackedSet.this.size) {
                         throw new NoSuchElementException();
                     }
 
@@ -596,10 +595,7 @@ class BackingCollections {
             return result;
         }
 
-        @SuppressWarnings("unchecked")
-        private static <E> E[] createEArray(int size) {
-            return (E[]) new Object[size];
-        }
+
 
         int hashPosition(Object e) {
             return hashPosition(tableSize, e);
@@ -674,8 +670,12 @@ class BackingCollections {
                 if (table == null) {
                     int hashPosition = hashPosition(e);
                     table = createEArray(tableSize + COLLISION_HEAD_ROOM);
-                    flat = createEArray(tableSize + COLLISION_HEAD_ROOM);
                     indices = new short[tableSize + COLLISION_HEAD_ROOM];
+
+                    if (flat == null) {
+                        flat = createEArray(tableSize <= 64 ? tableSize : tableSize / 2);
+                    }
+
                     table[hashPosition] = e;
                     indices[hashPosition] = 0;
                     flat[0] = e;
@@ -687,6 +687,7 @@ class BackingCollections {
                     if (table[position] == null) {
                         table[position] = e;
                         indices[position] = size;
+                        extendFlat();
                         flat[size] = e;
                         size++;
                         return this;
@@ -703,17 +704,18 @@ class BackingCollections {
                         } else if (check == NO_SPACE) {
                             // collision
                             if (tableSize < 64) {
-                                return new HashArrayBackedSet.Builder<E>(64).with(build()).with(e);
+                                return new HashArrayBackedSet.Builder<E>(64).with(flat, size).with(e);
                             } else if (tableSize < 256) {
-                                return new HashArrayBackedSet.Builder<E>(256).with(build()).with(e);
+                                return new HashArrayBackedSet.Builder<E>(256).with(flat, size).with(e);
                             } else if (tableSize < 1024) {
-                                return new HashArrayBackedSet.Builder<E>(1024).with(build()).with(e);
+                                return new HashArrayBackedSet.Builder<E>(1024).with(flat, size).with(e);
                             } else {
-                                return new SetBackedSet.Builder<>(build()).with(e);
+                                return new SetBackedSet.Builder<E>(this.size).with(flat, size).with(e);
                             }
                         } else {
                             table[check] = e;
                             indices[check] = size;
+                            extendFlat();
                             flat[size] = e;
                             size++;
                             return this;
@@ -723,11 +725,15 @@ class BackingCollections {
             }
 
             @Override
-            InternalBuilder<E> with(Collection<E> collection) {
+            InternalBuilder<E> with(E [] flat, int size) {
+                if (this.flat == null) {
+                    this.flat = flat;
+                }
+
                 InternalBuilder<E> builder = this;
 
-                for (E e : collection) {
-                    builder = builder.with(e);
+                for (int i = 0; i < size; i++) {
+                    builder = builder.with(flat[i]);
                 }
 
                 return builder;
@@ -742,7 +748,7 @@ class BackingCollections {
                     return new TwoElementSet<>(this.flat[0], this.flat[1]);
                 } else {
                     E[] flat = this.flat;
-                    if (size != flat.length) {
+                    if (flat.length > size + 16) {
                         flat = createEArray(size);
                         System.arraycopy(this.flat, 0, flat, 0, size);
                     }
@@ -783,12 +789,19 @@ class BackingCollections {
                             throw new NoSuchElementException();
                         }
                     }
-
                 };
             }
 
             private int hashPosition(Object e) {
                 return HashArrayBackedSet.hashPosition(tableSize, e);
+            }
+
+            private void extendFlat() {
+                if (size >= flat.length) {
+                    E [] newFlat = createEArray(Math.min(flat.length + flat.length / 2 + 8, this.table.length));
+                    System.arraycopy(this.flat, 0, newFlat, 0, this.flat.length);
+                    this.flat = newFlat;
+                }
             }
 
             int checkTable(Object e, int hashPosition) {
@@ -830,12 +843,12 @@ class BackingCollections {
     final static class SetBackedSet<E> extends IndexedUnmodifiableSet<E> {
 
         private final Map<E, Integer> elements;
-        private final E[] table;
+        private final E[] flat;
 
-        SetBackedSet(Map<E, Integer> elements, E[] table) {
+        SetBackedSet(Map<E, Integer> elements, E[] flat) {
             super(elements.size());
             this.elements = elements;
-            this.table = table;
+            this.flat = flat;
         }
 
         @Override
@@ -886,8 +899,8 @@ class BackingCollections {
 
         @Override
         E indexToElement(int i) {
-            if (i >= 0 && i < table.length) {
-                return table[i];
+            if (i >= 0 && i < flat.length) {
+                return flat[i];
             } else {
                 return null;
             }
@@ -895,46 +908,58 @@ class BackingCollections {
 
         static class Builder<E> extends InternalBuilder<E> {
             private HashMap<E, Integer> delegate;
-            private ArrayList<E> table;
+            private E [] flat;
 
             Builder(int expectedCapacity) {
                 this.delegate = new HashMap<>(expectedCapacity);
-                this.table = new ArrayList<>(expectedCapacity);
             }
 
             Builder(Collection<E> set) {
                 this.delegate = new HashMap<>(set.size());
-                this.table = new ArrayList<>(set.size());
+                this.flat = createEArray(set.size());
 
                 int i = 0;
 
                 for (E e : set) {
                     this.delegate.put(e, i);
-                    this.table.add(e);
+                    this.flat[i] = e;
                     i++;
                 }
             }
 
+            @Override
             public Builder<E> with(E e) {
-                this.delegate.put(e, this.delegate.size());
-                this.table.add(e);
+                int pos = this.delegate.size();
+                this.delegate.put(e, pos);
+                extendFlat();
+                this.flat[pos] = e;
                 return this;
             }
 
-            @SuppressWarnings("unchecked")
+            @Override
+            InternalBuilder<E> with(E [] flat, int size) {
+                if (this.flat == null) {
+                    this.flat = flat;
+
+                    for (int i = 0; i < size; i++) {
+                        this.delegate.put(flat[i], i);
+                    }
+                } else {
+                    for (int i = 0; i < size; i++) {
+                        with(flat[i]);
+                    }
+                }
+
+                return this;
+            }
+
             @Override
             IndexedUnmodifiableSet<E> build() {
-                return new SetBackedSet<>(this.delegate, this.table.toArray((E[]) new Object[table.size()]));
-            }
-
-            @Override
-            InternalBuilder<E> with(Collection<E> collection) {
-                int i = delegate.size();
-                for (E e : collection) {
-                    this.delegate.put(e, i);
-                    i++;
+                if (delegate.isEmpty()) {
+                    return IndexedUnmodifiableSet.empty();
+                } else {
+                    return new SetBackedSet<>(this.delegate, this.flat);
                 }
-                return this;
             }
 
             @Override
@@ -956,6 +981,19 @@ class BackingCollections {
             boolean contains(Object o) {
                 return delegate.keySet().contains(o);
             }
+
+            private void extendFlat() {
+                if (delegate.size() >= flat.length) {
+                    E [] newFlat = createEArray(flat.length + flat.length / 2 + 8);
+                    System.arraycopy(this.flat, 0, newFlat, 0, this.flat.length);
+                    this.flat = newFlat;
+                }
+            }
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <E> E[] createEArray(int size) {
+        return (E[]) new Object[size];
     }
 }
