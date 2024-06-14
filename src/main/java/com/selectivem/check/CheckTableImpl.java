@@ -39,7 +39,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.function.Predicate;
 
-public class CheckTableImpl {
+class CheckTableImpl {
 
     static <R, C> CheckTable<R, C> create(R row, Set<C> columns) {
         if (columns.size() == 0) {
