@@ -111,7 +111,7 @@ class BackingCollections {
             } else {
                 if (size <= 800) {
                     InternalBuilder<E> internalBuilder = new HashArrayBackedSet.Builder<E>(
-                            size <= 8 ? 16 : size <= 40 ? 64 : size < 200 ? 256 : 1024);
+                            size <= 8 ? 16 : size <= 40 ? 64 : size < 200 ? 256 : 1024, size);
 
                     for (E e : set) {
                         internalBuilder = internalBuilder.with(e);
@@ -126,7 +126,7 @@ class BackingCollections {
 
         static <E> InternalBuilder<E> builder(int size) {
             if (size <= 800) {
-                return new HashArrayBackedSet.Builder<E>(size <= 10 ? 16 : size <= 50 ? 64 : size < 200 ? 256 : 1024);
+                return new HashArrayBackedSet.Builder<E>(size <= 10 ? 16 : size <= 50 ? 64 : size < 200 ? 256 : 1024, size);
             } else {
                 return new SetBackedSet.Builder<E>(size);
             }
@@ -660,6 +660,13 @@ class BackingCollections {
 
             public Builder(int tableSize) {
                 this.tableSize = tableSize;
+            }
+
+            public Builder(int tableSize, int flatSize) {
+                this.tableSize = tableSize;
+                if (flatSize > 0) {
+                    this.flat = createEArray(flatSize);
+                }
             }
 
             public InternalBuilder<E> with(E e) {

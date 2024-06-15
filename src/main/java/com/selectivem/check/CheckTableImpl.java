@@ -1449,7 +1449,6 @@ class CheckTableImpl {
 
                 i = 0;
                 for (C column : columns) {
-
                     String v = isChecked(row, column) ? checkedIndicator : uncheckedIndicator;
 
                     result.append(" ");
@@ -1458,7 +1457,6 @@ class CheckTableImpl {
                     i++;
                 }
                 result.append("\n");
-
             }
 
             return result.toString();
@@ -1474,7 +1472,8 @@ class CheckTableImpl {
                 return rows;
             }
 
-            BackingCollections.IndexedUnmodifiableSet.InternalBuilder<R> builder = BackingCollections.IndexedUnmodifiableSet.builder(rowCount);
+            int estimatedRows = Math.min(checkedCount / columnCount + 12, rowCount - 1);
+            BackingCollections.IndexedUnmodifiableSet.InternalBuilder<R> builder = BackingCollections.IndexedUnmodifiableSet.builder(estimatedRows);
 
             for (int rowIndex = 0; rowIndex < rowCount; rowIndex++) {
                 if (isRowCompleted(rowIndex)) {
@@ -1496,7 +1495,8 @@ class CheckTableImpl {
                 return columns;
             }
 
-            BackingCollections.IndexedUnmodifiableSet.InternalBuilder<C> builder = BackingCollections.IndexedUnmodifiableSet.builder(columnCount);
+            int estimatedColumns = Math.min(checkedCount / rowCount + 12, columnCount - 1);
+            BackingCollections.IndexedUnmodifiableSet.InternalBuilder<C> builder = BackingCollections.IndexedUnmodifiableSet.builder(estimatedColumns);
 
             for (int columnIndex = 0; columnIndex < columnCount; columnIndex++) {
                 if (isColumnCompleted(columnIndex)) {
@@ -1518,7 +1518,8 @@ class CheckTableImpl {
                 return rows;
             }
 
-            BackingCollections.IndexedUnmodifiableSet.InternalBuilder<R> builder = BackingCollections.IndexedUnmodifiableSet.builder(rowCount);
+            int estimatedRows = Math.min(uncheckedCount / columnCount + 12, rowCount - 1);
+            BackingCollections.IndexedUnmodifiableSet.InternalBuilder<R> builder = BackingCollections.IndexedUnmodifiableSet.builder(estimatedRows);
 
             for (int rowIndex = 0; rowIndex < rowCount; rowIndex++) {
                 if (!isRowCompleted(rowIndex)) {
@@ -1540,7 +1541,8 @@ class CheckTableImpl {
                 return columns;
             }
 
-            BackingCollections.IndexedUnmodifiableSet.InternalBuilder<C> builder = BackingCollections.IndexedUnmodifiableSet.builder(columnCount);
+            int estimatedColumns = Math.min(uncheckedCount / rowCount + 12, columnCount - 1);
+            BackingCollections.IndexedUnmodifiableSet.InternalBuilder<C> builder = BackingCollections.IndexedUnmodifiableSet.builder(estimatedColumns);
 
             for (int columnIndex = 0; columnIndex < columnCount; columnIndex++) {
                 if (!isColumnCompleted(columnIndex)) {
