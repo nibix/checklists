@@ -34,9 +34,7 @@
 
 package com.selectivem.check;
 
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 
 class CheckListImpl {
@@ -46,16 +44,19 @@ class CheckListImpl {
     }
 
     static <E> CheckList<E> create(Set<E> elements, String elementName) {
-        if (elements.size() == 2) {
-            Iterator<E> iter = elements.iterator();
+        int size = elements.size();
 
+        if (size == 2) {
+            Iterator<E> iter = elements.iterator();
             return new CheckListImpl.TwoElementCheckList<E>(iter.next(), iter.next(), elementName);
+        } else if (size >= 800) {
+            return new CheckListImpl.HashMapCheckList<>(elements, elementName);
         } else {
-            return new CheckListImpl.BasicCheckList<E>(elements, elementName);
+            return new CheckListImpl.ArrayCheckList<E>(elements, elementName);
         }
     }
 
-    static class TwoElementCheckList<E> implements CheckList<E> {
+    final static class TwoElementCheckList<E> implements CheckList<E> {
 
         private final E e1;
         private final E e2;
@@ -216,7 +217,7 @@ class CheckListImpl {
 
     }
 
-    static class BasicCheckList<E> implements CheckList<E> {
+    final static class ArrayCheckList<E> implements CheckList<E> {
 
         private final BackingCollections.IndexedUnmodifiableSet<E> elements;
         private final boolean[] checked;
@@ -224,7 +225,7 @@ class CheckListImpl {
         private int uncheckedCount;
         private final int size;
 
-        BasicCheckList(Set<E> elements, String elementName) {
+        ArrayCheckList(Set<E> elements, String elementName) {
             this.elements = BackingCollections.IndexedUnmodifiableSet.of(elements);
             this.size = this.elements.size();
             this.checked = new boolean[this.size];
@@ -366,18 +367,18 @@ class CheckListImpl {
 
                     @Override
                     public boolean contains(Object o) {
-                        int tablePos = BasicCheckList.this.elements.elementToIndex(o);
+                        int tablePos = ArrayCheckList.this.elements.elementToIndex(o);
 
                         if (tablePos == -1) {
                             return false;
                         } else {
-                            return BasicCheckList.this.checked[tablePos];
+                            return ArrayCheckList.this.checked[tablePos];
                         }
                     }
 
                     @Override
                     public Iterator<E> iterator() {
-                        int tableSize = BasicCheckList.this.elements.size();
+                        int tableSize = ArrayCheckList.this.elements.size();
 
                         return new Iterator<E>() {
 
@@ -404,14 +405,14 @@ class CheckListImpl {
                                     throw new NoSuchElementException();
                                 }
 
-                                E element = (E) BasicCheckList.this.elements.indexToElement(pos);
+                                E element = (E) ArrayCheckList.this.elements.indexToElement(pos);
                                 ready = false;
                                 return element;
                             }
 
                             int findNext(int start) {
                                 for (int i = start; i < tableSize; i++) {
-                                    if (BasicCheckList.this.checked[i]) {
+                                    if (ArrayCheckList.this.checked[i]) {
                                         return i;
                                     }
                                 }
@@ -441,18 +442,18 @@ class CheckListImpl {
 
                     @Override
                     public boolean contains(Object o) {
-                        int tablePos = BasicCheckList.this.elements.elementToIndex(o);
+                        int tablePos = ArrayCheckList.this.elements.elementToIndex(o);
 
                         if (tablePos == -1) {
                             return false;
                         } else {
-                            return !BasicCheckList.this.checked[tablePos];
+                            return !ArrayCheckList.this.checked[tablePos];
                         }
                     }
 
                     @Override
                     public Iterator<E> iterator() {
-                        int tableSize = BasicCheckList.this.elements.size();
+                        int tableSize = ArrayCheckList.this.elements.size();
 
                         return new Iterator<E>() {
 
@@ -469,14 +470,14 @@ class CheckListImpl {
                                     throw new NoSuchElementException();
                                 }
 
-                                E element = (E) BasicCheckList.this.elements.indexToElement(pos);
+                                E element = (E) ArrayCheckList.this.elements.indexToElement(pos);
                                 this.pos = findNext(this.pos + 1);
                                 return element;
                             }
 
                             int findNext(int start) {
                                 for (int i = start; i < tableSize; i++) {
-                                    if (!BasicCheckList.this.checked[i]) {
+                                    if (!ArrayCheckList.this.checked[i]) {
                                         return i;
                                     }
                                 }
@@ -505,7 +506,7 @@ class CheckListImpl {
 
                     @Override
                     public Iterator<E> iterator() {
-                        int tableSize = BasicCheckList.this.elements.size();
+                        int tableSize = ArrayCheckList.this.elements.size();
 
                         return new Iterator<E>() {
 
@@ -522,14 +523,14 @@ class CheckListImpl {
                                     throw new NoSuchElementException();
                                 }
 
-                                E element = (E) BasicCheckList.this.elements.indexToElement(pos);
+                                E element = (E) ArrayCheckList.this.elements.indexToElement(pos);
                                 this.pos = findNext(this.pos + 1);
                                 return element;
                             }
 
                             int findNext(int start) {
                                 for (int i = start; i < tableSize; i++) {
-                                    if (BasicCheckList.this.checked[i]) {
+                                    if (ArrayCheckList.this.checked[i]) {
                                         return i;
                                     }
                                 }
@@ -555,7 +556,7 @@ class CheckListImpl {
 
                     @Override
                     public Iterator<E> iterator() {
-                        int tableSize = BasicCheckList.this.elements.size();
+                        int tableSize = ArrayCheckList.this.elements.size();
 
                         return new Iterator<E>() {
 
@@ -572,14 +573,14 @@ class CheckListImpl {
                                     throw new NoSuchElementException();
                                 }
 
-                                E element = (E) BasicCheckList.this.elements.indexToElement(pos);
+                                E element = (E) ArrayCheckList.this.elements.indexToElement(pos);
                                 this.pos = findNext(this.pos + 1);
                                 return element;
                             }
 
                             int findNext(int start) {
                                 for (int i = start; i < tableSize; i++) {
-                                    if (!BasicCheckList.this.checked[i]) {
+                                    if (!ArrayCheckList.this.checked[i]) {
                                         return i;
                                     }
                                 }
@@ -592,4 +593,304 @@ class CheckListImpl {
             }
         }
     }
+
+    final static class HashMapCheckList<E> implements CheckList<E> {
+        private final Set<E> elements;
+        private final Map<E, Boolean> checked;
+        private final String elementName;
+        private int uncheckedCount;
+        private final int size;
+
+        HashMapCheckList(Set<E> elements, String elementName) {
+            this.checked = createCheckedMap(elements);
+            this.elements = Collections.unmodifiableSet(this.checked.keySet());
+            this.size = this.elements.size();
+            this.uncheckedCount = this.size;
+            this.elementName = elementName;
+        }
+
+        @Override
+        public boolean check(E element) {
+            doCheck(element);
+
+            return this.uncheckedCount == 0;
+        }
+
+        private void doCheck(E element) {
+            Boolean current = this.checked.get(element);
+
+            if (current == null) {
+                throw new IllegalArgumentException("Invalid " + elementName + ": " + element);
+            }
+
+            if (!current) {
+                this.checked.put(element, Boolean.TRUE);
+                this.uncheckedCount--;
+            }
+        }
+
+        @Override
+        public void uncheck(E element) {
+            Boolean current = this.checked.get(element);
+
+            if (current == null) {
+                throw new IllegalArgumentException("Invalid " + elementName + ": " + element);
+            }
+
+            if (current) {
+                this.checked.put(element, Boolean.FALSE);
+                this.uncheckedCount++;
+            }
+        }
+
+        @Override
+        public void uncheckIfPresent(E element) {
+            Boolean current = this.checked.get(element);
+
+            if (current == null) {
+                return;
+            }
+
+            if (current) {
+                this.checked.put(element, Boolean.FALSE);
+                this.uncheckedCount++;
+            }
+        }
+
+        @Override
+        public boolean checkIf(Predicate<E> checkPredicate) {
+            if (isComplete()) {
+                return true;
+            }
+
+            this.checked.forEach((e, v) -> {
+                if (!v && checkPredicate.test(e)) {
+                    this.checked.put(e, Boolean.TRUE);
+                    this.uncheckedCount--;
+                }
+            });
+
+            return this.uncheckedCount == 0;
+        }
+
+        @Override
+        public void uncheckIf(Predicate<E> checkPredicate) {
+            if (isBlank()) {
+                return;
+            }
+
+            this.checked.forEach((e, v) -> {
+                if (v && checkPredicate.test(e)) {
+                    this.checked.put(e, Boolean.FALSE);
+                    this.uncheckedCount++;
+                }
+            });
+        }
+
+        @Override
+        public void checkAll() {
+            if (isComplete()) {
+                return;
+            }
+
+            for (E element : elements) {
+                this.checked.put(element, Boolean.TRUE);
+            }
+
+            this.uncheckedCount = 0;
+        }
+
+        @Override
+        public void uncheckAll() {
+            if (isBlank()) {
+                return;
+            }
+
+            for (E element : elements) {
+                this.checked.put(element, Boolean.FALSE);
+            }
+
+            this.uncheckedCount = this.size;
+        }
+
+        @Override
+        public boolean isChecked(E element) {
+            Boolean current = this.checked.get(element);
+
+            if (current == null) {
+                throw new IllegalArgumentException("Invalid " + elementName + ": " + element);
+            }
+
+            return current;
+        }
+
+        @Override
+        public boolean isComplete() {
+            return this.uncheckedCount == 0;
+        }
+
+        @Override
+        public boolean isBlank() {
+            return this.uncheckedCount == this.size;
+        }
+
+        @Override
+        public int size() {
+            return this.size;
+        }
+
+        @Override
+        public Set<E> getElements() {
+            return elements;
+        }
+
+        @Override
+        public Set<E> getCheckedElements() {
+            if (isComplete()) {
+                return elements;
+            } else if (isBlank()) {
+                return BackingCollections.IndexedUnmodifiableSet.empty();
+            } else {
+                return new BackingCollections.UnmodifiableSet<E>() {
+                    @Override
+                    public boolean contains(Object o) {
+                        Boolean checked = HashMapCheckList.this.checked.get(o);
+
+                        if (checked == null) {
+                            return false;
+                        } else {
+                            return checked;
+                        }
+                    }
+
+                    @Override
+                    public Iterator<E> iterator() {
+                        Iterator<E> delegate = HashMapCheckList.this.elements.iterator();
+
+                        return new Iterator<E>() {
+                            private E next = findNext();
+
+                            @Override
+                            public boolean hasNext() {
+                                return next != null;
+                            }
+
+                            @Override
+                            public E next() {
+                                if (!hasNext()) {
+                                    throw new NoSuchElementException();
+                                }
+
+                                E result = this.next;
+                                this.next = findNext();
+                                return result;
+                            }
+
+                            E findNext() {
+                                while (delegate.hasNext()) {
+                                    E e = delegate.next();
+
+                                    if (HashMapCheckList.this.checked.get(e)) {
+                                        return e;
+                                    }
+                                }
+
+                                return null;
+                            }
+                        };
+                    }
+
+                    @Override
+                    public int size() {
+                        return size - uncheckedCount;
+                    }
+                };
+            }
+        }
+
+        @Override
+        public Set<E> getUncheckedElements() {
+            if (isComplete()) {
+                return BackingCollections.IndexedUnmodifiableSet.empty();
+            } else if (isBlank()) {
+                return elements;
+            } else {
+                return new BackingCollections.UnmodifiableSet<E>() {
+                    @Override
+                    public boolean contains(Object o) {
+                        Boolean checked = HashMapCheckList.this.checked.get(o);
+
+                        if (checked == null) {
+                            return false;
+                        } else {
+                            return !checked;
+                        }
+                    }
+
+                    @Override
+                    public Iterator<E> iterator() {
+                        Iterator<E> delegate = HashMapCheckList.this.elements.iterator();
+
+                        return new Iterator<E>() {
+                            private E next = findNext();
+
+                            @Override
+                            public boolean hasNext() {
+                                return next != null;
+                            }
+
+                            @Override
+                            public E next() {
+                                if (!hasNext()) {
+                                    throw new NoSuchElementException();
+                                }
+
+                                E result = this.next;
+                                this.next = findNext();
+                                return result;
+                            }
+
+                            E findNext() {
+                                while (delegate.hasNext()) {
+                                    E e = delegate.next();
+
+                                    if (!HashMapCheckList.this.checked.get(e)) {
+                                        return e;
+                                    }
+                                }
+
+                                return null;
+                            }
+                        };
+                    }
+
+                    @Override
+                    public int size() {
+                        return uncheckedCount;
+                    }
+                };
+            }
+        }
+
+        @Override
+        public Iterable<E> iterateCheckedElements() {
+            return getCheckedElements();
+        }
+
+        @Override
+        public Iterable<E> iterateUncheckedElements() {
+            return getUncheckedElements();
+        }
+
+        static <E> Map<E, Boolean> createCheckedMap(Set<E> elements) {
+            HashMap<E, Boolean> result = new HashMap<>(elements.size());
+
+            for (E e : elements) {
+                result.put(e, Boolean.FALSE);
+            }
+
+            return result;
+        }
+    }
+
 }

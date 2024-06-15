@@ -41,6 +41,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -58,7 +59,7 @@ public class CheckListRandomizedTest {
     public static Collection<Params> seeds() {
         ArrayList<Params> result = new ArrayList<>(10000);
 
-        for (int size : Arrays.asList(1, 2, 3, 4, 6, 10, 20, 60, 100, 500, 1000)) {
+        for (int size : Arrays.asList(1, 2, 3, 4, 6, 10, 20, 60, 100, 200, 500, 700, 1000)) {
             for (int seed = 100; seed < 1000; seed++) {
                 result.add(new Params(size, seed));
             }
@@ -186,6 +187,41 @@ public class CheckListRandomizedTest {
             Assert.assertEquals(subject + " vs " + reference, checkResultReference, checkResult);
             Assert.assertEquals(subject.getCheckedElements(), reference);
         }
+    }
+
+    @Test
+    public void checkIf_uncheckIf() {
+        Random random = new Random(params.seed + 1000);
+        Set<String> elements = createElements(params, random);
+        List<String> elementsList = new ArrayList<>(elements);
+        Collections.shuffle(elementsList, random);
+
+        CheckList<String> subject = CheckList.create(elements);
+        Set<String> reference = new HashSet<>();
+
+        subject.checkIf(e -> e.contains("7"));
+        Set<String> expected = elements.stream().filter(e -> e.contains("7")).collect(Collectors.toSet());
+
+        Assert.assertEquals(expected, subject.getCheckedElements());
+
+        subject.uncheckIf(e -> e.contains("9"));
+        expected.removeAll(elements.stream().filter(e -> e.contains("9")).collect(Collectors.toSet()));
+
+        Assert.assertEquals(expected, subject.getCheckedElements());
+
+        for (int i = 0; i <= 9; i++) {
+            String s = i + "";
+            subject.checkIf(e -> e.contains(s));
+            expected.addAll(elements.stream().filter(e -> e.contains(s)).collect(Collectors.toSet()));
+
+            Assert.assertEquals(expected, subject.getCheckedElements());
+            Assert.assertEquals(expected.size() == elements.size(), subject.isComplete());
+        }
+
+        subject.uncheckAll();
+        Assert.assertEquals(Collections.emptySet(), subject.getCheckedElements());
+        subject.checkAll();
+        Assert.assertEquals(elements, subject.getCheckedElements());
     }
 
     static Set<String> createElements(Params params, Random random) {

@@ -79,7 +79,7 @@ public class CheckTableRandomizedTest {
             result.add(new Object[] { i, 2, 2 });
         }
 
-        for (int i = 111; i < 150; i++) {
+        for (int i = 111; i <= 222; i++) {
             result.add(new Object[] { i, randomSize(random), randomSize(random) });
         }
 

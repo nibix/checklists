@@ -860,7 +860,6 @@ class CheckTableImpl {
             } else {
                 throw new IllegalArgumentException("Invalid column: " + column);
             }
-
         }
 
         @Override
@@ -879,7 +878,6 @@ class CheckTableImpl {
             } else {
                 throw new IllegalArgumentException("Invalid column: " + column);
             }
-
         }
 
         @Override
@@ -894,12 +892,10 @@ class CheckTableImpl {
             } else {
                 throw new IllegalArgumentException("Invalid column: " + column);
             }
-
         }
 
         @Override
         public Iterable<C> iterateUncheckedColumns(R row) {
-
             if (rows.isChecked(row)) {
                 return BackingCollections.IndexedUnmodifiableSet.empty();
             } else {
