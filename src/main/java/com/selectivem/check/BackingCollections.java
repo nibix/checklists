@@ -511,7 +511,7 @@ class BackingCollections {
 
         @Override
         public boolean isEmpty() {
-            return size == 0;
+            return false;
         }
 
         @Override
@@ -553,10 +553,6 @@ class BackingCollections {
 
         @Override
         public Iterator<E> iterator() {
-            if (isEmpty()) {
-                return Collections.emptyIterator();
-            }
-
             return new Iterator<E>() {
                 private int i = 0;
 
@@ -594,8 +590,6 @@ class BackingCollections {
             System.arraycopy(flat, 0, result, 0, size);
             return result;
         }
-
-
 
         int hashPosition(Object e) {
             return hashPosition(tableSize, e);

@@ -37,6 +37,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -48,7 +49,8 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({BackingCollectionsTest.IndexedImmutableSet.RandomizedTestBig.class,
-        BackingCollectionsTest.IndexedImmutableSet.ImmutableSetRandomizedTestSmall.class, BackingCollectionsTest.IndexedImmutableSet.ImmutableSetTest.class})
+        BackingCollectionsTest.IndexedImmutableSet.ImmutableSetRandomizedTestSmall.class, BackingCollectionsTest.IndexedImmutableSet.ImmutableSetTest.class,
+BackingCollectionsTest.IndexedImmutableSet.ImmutableSetParameterizedTest.class})
 public class BackingCollectionsTest {
 
     public static class IndexedImmutableSet {
@@ -372,20 +374,162 @@ public class BackingCollectionsTest {
 
         public static class ImmutableSetTest {
             @Test
-            public void isEmpty() {
-                Assert.assertTrue(BackingCollections.IndexedUnmodifiableSet.empty().isEmpty());
-                Assert.assertTrue(BackingCollections.IndexedUnmodifiableSet.builder(10).build().isEmpty());
-                Assert.assertFalse(BackingCollections.IndexedUnmodifiableSet.of(1).isEmpty());
-                Assert.assertFalse(BackingCollections.IndexedUnmodifiableSet.of(1, 2).isEmpty());
-                Assert.assertFalse(BackingCollections.IndexedUnmodifiableSet.of(new HashSet<>(Arrays.asList(1, 2, 3, 4, 5, 7, 8, 9, 10, 11))).isEmpty());
-            }
-
-            @Test
             public void builder_toString() {
                 BackingCollections.IndexedUnmodifiableSet.InternalBuilder<String> builder = BackingCollections.IndexedUnmodifiableSet.builder(10);
                 builder = builder.with("a").with("b").with("c");
                 Assert.assertEquals("[a, b, c]", builder.toString());
             }
+
+            @Test(expected = IllegalArgumentException.class)
+            public void builder_nullElement() {
+                BackingCollections.IndexedUnmodifiableSet.InternalBuilder<String> builder = BackingCollections.IndexedUnmodifiableSet.builder(10);
+                builder = builder.with(null);
+            }
+
+            @Test
+            public void builder_contains_positive() {
+                BackingCollections.IndexedUnmodifiableSet.InternalBuilder<String> builder = BackingCollections.IndexedUnmodifiableSet.builder(10);
+                builder = builder.with("a").with("b").with("c");
+                Assert.assertTrue(builder.contains("a"));
+            }
+
+            @Test
+            public void builder_contains_negative() {
+                BackingCollections.IndexedUnmodifiableSet.InternalBuilder<String> builder = BackingCollections.IndexedUnmodifiableSet.builder(10);
+                Assert.assertFalse(builder.contains("xyz"));
+                builder = builder.with("a").with("b").with("c");
+                Assert.assertFalse(builder.contains("xyz"));
+            }
+
+            @Test
+            public void builder_iterator_empty() {
+                BackingCollections.IndexedUnmodifiableSet.InternalBuilder<String> builder = BackingCollections.IndexedUnmodifiableSet.builder(10);
+                Assert.assertFalse(builder.iterator().hasNext());
+            }
+
+
+            @Test(expected = NoSuchElementException.class)
+            public void builder_iterator_exhausted() {
+                BackingCollections.IndexedUnmodifiableSet.InternalBuilder<String> builder = BackingCollections.IndexedUnmodifiableSet.<String>builder(10).with("a");
+                Iterator<String> iter = builder.iterator();
+
+                while (iter.hasNext()) {
+                    iter.next();
+                }
+
+                iter.next();
+            }
+
+        }
+
+        @RunWith(Parameterized.class)
+        public static class ImmutableSetParameterizedTest {
+            final BackingCollections.IndexedUnmodifiableSet<String> subject;
+            final Set<String> reference;
+
+            @Test
+            public void equals() {
+                Assert.assertEquals(reference, subject);
+            }
+
+            @Test
+            public void isEmpty() {
+                Assert.assertEquals(reference.isEmpty(), subject.isEmpty());
+            }
+
+            @Test
+            public void containsAll_positive() {
+                Assert.assertTrue(subject.containsAll(reference));
+            }
+
+            @Test
+            public void containsAll_negative() {
+                HashSet<String> more = new HashSet<>(reference);
+                more.add("xyz");
+                Assert.assertFalse(subject.containsAll(more));
+            }
+
+            @Test
+            public void elementToIndex_notExists() {
+                Assert.assertEquals(-1, subject.elementToIndex("xyz"));
+            }
+
+            @Test
+            public void indexToElement_notExists() {
+                Assert.assertNull(subject.indexToElement(99999));
+            }
+
+            @Test
+            public void toArray() {
+                Assert.assertArrayEquals(reference.toArray(), subject.toArray());
+            }
+
+            @Test
+            public void toArray_param() {
+                Assert.assertArrayEquals(reference.toArray(new String[0]), subject.toArray(new String[0]));
+            }
+
+            @Test(expected = UnsupportedOperationException.class)
+            public void add() {
+                subject.add("x");
+            }
+
+            @Test(expected = UnsupportedOperationException.class)
+            public void addAll() {
+                subject.addAll(Arrays.asList("x"));
+            }
+
+            @Test(expected = UnsupportedOperationException.class)
+            public void clear() {
+                subject.clear();
+            }
+
+            @Test(expected = UnsupportedOperationException.class)
+            public void remove() {
+                subject.remove("x");
+            }
+
+            @Test(expected = UnsupportedOperationException.class)
+            public void removeAll() {
+                subject.removeAll(Arrays.asList("x"));
+            }
+
+            @Test(expected = UnsupportedOperationException.class)
+            public void retainAll() {
+                subject.retainAll(Arrays.asList("x"));
+            }
+
+            @Test(expected = NoSuchElementException.class)
+            public void iterator_exhausted() {
+                Iterator<String> iter = subject.iterator();
+
+                while (iter.hasNext()) {
+                    iter.next();
+                }
+
+                iter.next();
+            }
+
+            public ImmutableSetParameterizedTest(Set<String> reference, BackingCollections.IndexedUnmodifiableSet<String> subject) {
+                this.subject = subject;
+                this.reference = reference;
+            }
+
+            @Parameterized.Parameters(name = "{0}")
+            public static Collection<Object[]> params() {
+                ArrayList<Object[]> result = new ArrayList<>();
+
+                result.add(new Object [] {new HashSet<>(), BackingCollections.IndexedUnmodifiableSet.empty()});
+                result.add(new Object [] {new HashSet<>(), BackingCollections.IndexedUnmodifiableSet.builder(10).build()});
+                result.add(new Object [] {new HashSet<>(Arrays.asList("a")), BackingCollections.IndexedUnmodifiableSet.of("a")});
+                result.add(new Object [] {new HashSet<>(Arrays.asList("a", "b")), BackingCollections.IndexedUnmodifiableSet.of("a", "b")});
+                result.add(new Object [] {new HashSet<>(Arrays.asList("a", "b", "c")), BackingCollections.IndexedUnmodifiableSet.of(new HashSet<>(Arrays.asList("a", "b", "c")))});
+                result.add(new Object [] {new HashSet<>(Arrays.asList("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l")), BackingCollections.IndexedUnmodifiableSet.of(new HashSet<>(Arrays.asList("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l")))});
+                result.add(new Object [] {IntStream.rangeClosed(1, 1000).mapToObj(Integer::toString).collect(Collectors.toSet()), BackingCollections.IndexedUnmodifiableSet.of(IntStream.rangeClosed(1, 1000).mapToObj(Integer::toString).collect(Collectors.toSet()))});
+
+                return result;
+            }
+
         }
 
         static String[] ipAddresses = createRandomIpAddresses(new Random(9));

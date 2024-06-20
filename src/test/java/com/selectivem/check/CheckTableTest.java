@@ -55,6 +55,28 @@ public class CheckTableTest {
         Assert.assertTrue(subject.isComplete());
     }
 
+    @Test
+    public void check_repeated() {
+        int checkedCount = 0;
+
+        for (Integer row : rows) {
+            for (String column : columns) {
+                checkedCount++;
+
+                subject.check(row, column);
+                subject.check(row, column);
+
+                Assert.assertTrue(subject.isChecked(row, column));
+
+                if (checkedCount != count) {
+                    Assert.assertFalse(subject.isComplete());
+                }
+            }
+        }
+
+        Assert.assertTrue(subject.isComplete());
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void check_illegalArgument_row() {
         subject.check(99, "a");
@@ -86,6 +108,30 @@ public class CheckTableTest {
 
         Assert.assertTrue(subject.isBlank());
     }
+
+    @Test
+    public void uncheck_repeated() {
+        subject.checkIf(rows, (i) -> true);
+        int checkedCount = count;
+
+        for (Integer row : rows) {
+            for (String column : columns) {
+                checkedCount--;
+
+                subject.uncheck(row, column);
+                subject.uncheck(row, column);
+
+                Assert.assertFalse(subject.isChecked(row, column));
+
+                if (checkedCount != 0) {
+                    Assert.assertFalse(subject.isBlank());
+                }
+            }
+        }
+
+        Assert.assertTrue(subject.isBlank());
+    }
+
 
     @Test(expected = IllegalArgumentException.class)
     public void uncheck_illegalArgument_row() {
@@ -122,6 +168,12 @@ public class CheckTableTest {
         for (Integer row : rows) {
             Assert.assertEquals(row == 1, subject.isChecked(row, "a"));
         }
+
+        subject.checkIf((i) -> i == 2, "a");
+
+        for (Integer row : rows) {
+            Assert.assertEquals(row == 1 || row == 2, subject.isChecked(row, "a"));
+        }
     }
 
     @Test
@@ -131,6 +183,40 @@ public class CheckTableTest {
         for (String column : columns) {
             Assert.assertEquals(column.equals("a"), subject.isChecked(1, column));
         }
+
+        subject.checkIf(1, (i) -> i.equals("b"));
+
+        for (String column : columns) {
+            Assert.assertEquals(column.equals("a") || column.equals("b"), subject.isChecked(1, column));
+        }
+    }
+
+    @Test
+    public void checkIf_row_noop() {
+        subject.checkIf(rows, (i) -> true);
+        subject.checkIf((i) -> {
+            Assert.fail();
+            return false;
+        }, "a");
+    }
+
+    @Test
+    public void checkIf_column_noop() {
+        subject.checkIf(rows, (i) -> true);
+        subject.checkIf(1, (i) -> {
+            Assert.fail();
+            return false;
+        });
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void checkIf_illegalArgument_row() {
+        subject.checkIf((i) -> i == 1, "xyz");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void checkIf_illegalArgument_column() {
+        subject.checkIf(123, (i) -> i.equals("a"));
     }
 
     @Test
@@ -151,6 +237,14 @@ public class CheckTableTest {
         for (String column : columns) {
             Assert.assertEquals(!(column.equals("a")), subject.isChecked(1, column));
         }
+    }
+
+    @Test
+    public void uncheckIf_column_blank() {
+        subject.uncheckIf(1, (i) -> {
+            Assert.fail();
+            return false;
+        });
     }
 
     @Test
@@ -177,6 +271,16 @@ public class CheckTableTest {
         }
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void uncheckIf_illegalArgument_row() {
+        subject.uncheckIf((i) -> i == 1, "xyz");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void uncheckIf_illegalArgument_column() {
+        subject.uncheckIf(123, (i) -> i.equals("a"));
+    }
+
     @Test
     public void uncheckRowIf() {
         subject.checkIf(rows, (i) -> true);
@@ -199,6 +303,20 @@ public class CheckTableTest {
         }
     }
 
+
+    @Test(expected = IllegalArgumentException.class)
+    public void uncheckRow_illegalArgument() {
+        subject.checkIf(rows, (i) -> true);
+        subject.uncheckRow(1234);
+    }
+
+    @Test
+    public void uncheckRow_blank() {
+        for (Integer row : rows) {
+            subject.uncheckRow(row);
+        }
+    }
+
     @Test
     public void uncheckRowIfPresent() {
         subject.checkIf(rows, (i) -> true);
@@ -208,6 +326,13 @@ public class CheckTableTest {
             Assert.assertFalse(subject.isChecked(row, "a"));
         }
     }
+
+    @Test
+    public void uncheckRowIfPresent_notExists() {
+        subject.checkIf(rows, (i) -> true);
+        subject.uncheckRowIfPresent(1234);
+    }
+
 
     @Test
     public void iterateUncheckedRows() {
@@ -245,6 +370,16 @@ public class CheckTableTest {
             subject.iterateUncheckedColumns(1).forEach(returned::add);
             Assert.assertEquals(uncheckedColumns, returned);
         }
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void iterateUncheckedColumns_illegalArgument() {
+        subject.iterateUncheckedColumns(123);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void iterateUncheckedRows_illegalArgument() {
+        subject.iterateUncheckedRows("abc");
     }
 
     @Test
@@ -285,6 +420,16 @@ public class CheckTableTest {
         }
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void iterateCheckedColumns_illegalArgument() {
+        subject.iterateCheckedColumns(123);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void iterateCheckedRows_illegalArgument() {
+        subject.iterateCheckedRows("abc");
+    }
+
     @Test
     public void getRows() {
         Assert.assertEquals(rows, subject.getRows());
@@ -303,6 +448,7 @@ public class CheckTableTest {
     @Test
     public void containsCellFor_negative() {
         Assert.assertFalse(subject.containsCellFor(1, "xyz"));
+        Assert.assertFalse(subject.containsCellFor(123, "a"));
     }
 
     @Test
@@ -360,6 +506,74 @@ public class CheckTableTest {
                             "2| . | . |\n", //
                     result);
         }
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void isRowComplete_illegalArgument() {
+        subject.isRowComplete(123);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void isColumnComplete_illegalArgument() {
+        subject.isColumnComplete("abc");
+    }
+
+    @Test
+    public void getIncompleteRows_empty() {
+        Assert.assertEquals(rows, subject.getIncompleteRows());
+    }
+
+    @Test
+    public void getIncompleteColumns_empty() {
+        Assert.assertEquals(columns, subject.getIncompleteColumns());
+    }
+
+    @Test
+    public void getCheckedColumns() {
+        subject.checkIf(rows, (c) -> someColumns.contains(c));
+        Assert.assertEquals(someColumns, subject.getCheckedColumns(rows.iterator().next()));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void getCheckedColumns_illegalArgument() {
+        subject.checkIf(rows, (c) -> someColumns.contains(c));
+        subject.getCheckedColumns(1234);
+    }
+
+    @Test
+    public void create_singleRow() {
+        Integer row = rows.iterator().next();
+        CheckTable<Integer, String> subject = CheckTable.create(row, columns);
+
+        Assert.assertEquals(setOf(row), subject.getRows());
+    }
+
+    @Test
+    public void create_singleColumn() {
+        String column = columns.iterator().next();
+        CheckTable<Integer, String> subject = CheckTable.create(rows, column);
+
+        Assert.assertEquals(setOf(column), subject.getColumns());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void createEmpty_rows() {
+        CheckTable.create(setOf(), columns);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void createEmpty_columns() {
+        CheckTable.create(rows, setOf());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void createEmpty_rows_singleColumn() {
+        CheckTable.create(setOf(), columns.iterator().next());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void createEmpty_columns_singleRow() {
+        CheckTable.create(rows.iterator().next(), setOf());
     }
 
     @Parameterized.Parameters(name = "{0} / {1}")

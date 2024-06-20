@@ -304,6 +304,10 @@ class CheckTableImpl {
 
         @Override
         public Set<C> getCheckedColumns(R row) {
+            if (!row.equals(this.row)) {
+                throw new IllegalArgumentException("Invalid row: " + row);
+            }
+
             return getCompleteColumns();
         }
 
@@ -721,7 +725,11 @@ class CheckTableImpl {
 
         @Override
         public void uncheckIf(R row, Predicate<C> columnCheckPredicate) {
-            if (columnCheckPredicate.test(column)) {
+            if (!rows.getElements().contains(row)) {
+                throw new IllegalArgumentException("Invalid row: " + row);
+            }
+
+            if (rows.isChecked(row) && columnCheckPredicate.test(column)) {
                 rows.uncheck(row);
             }
         }
