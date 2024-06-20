@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/nibix/checklists/graph/badge.svg?token=957EGPZ5OE)](https://codecov.io/gh/nibix/checklists)
+
 # checklists
 Dedicated check list and check table data structures for Java.
 
