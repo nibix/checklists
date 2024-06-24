@@ -135,12 +135,14 @@ public class CheckListTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void isChecked_unknown() {
-        subject.uncheck("xxx");
+        subject.isChecked("xxx");
     }
 
     @Test
     public void getCheckedElements_unknown() {
         subject.checkAll();
+        Assert.assertFalse(subject.getCheckedElements().contains("xxx"));
+        subject.uncheck(oneElement);
         Assert.assertFalse(subject.getCheckedElements().contains("xxx"));
     }
 
@@ -149,6 +151,34 @@ public class CheckListTest {
         subject.checkAll();
 
         Iterator<String> iter = subject.getCheckedElements().iterator();
+
+        while (iter.hasNext()) {
+            iter.next();
+        }
+
+        iter.next();
+    }
+
+    @Test(expected = NoSuchElementException.class)
+    public void getCheckedElements_overrun2() {
+        subject.checkAll();
+        subject.uncheck(oneElement);
+
+        Iterator<String> iter = subject.getCheckedElements().iterator();
+
+        while (iter.hasNext()) {
+            iter.next();
+        }
+
+        iter.next();
+    }
+
+    @Test(expected = NoSuchElementException.class)
+    public void iterateCheckedElements_overrun() {
+        subject.checkAll();
+        subject.uncheck(oneElement);
+
+        Iterator<String> iter = subject.iterateCheckedElements().iterator();
 
         while (iter.hasNext()) {
             iter.next();
@@ -174,6 +204,34 @@ public class CheckListTest {
         subject.checkAll();
 
         Iterator<String> iter = subject.getUncheckedElements().iterator();
+
+        while (iter.hasNext()) {
+            iter.next();
+        }
+
+        iter.next();
+    }
+
+    @Test(expected = NoSuchElementException.class)
+    public void getUncheckedElements_overrun2() {
+        subject.checkAll();
+        subject.uncheck(oneElement);
+
+        Iterator<String> iter = subject.getUncheckedElements().iterator();
+
+        while (iter.hasNext()) {
+            iter.next();
+        }
+
+        iter.next();
+    }
+
+    @Test(expected = NoSuchElementException.class)
+    public void iterateUncheckedElements_overrun() {
+        subject.checkAll();
+        subject.uncheck(oneElement);
+
+        Iterator<String> iter = subject.iterateUncheckedElements().iterator();
 
         while (iter.hasNext()) {
             iter.next();
