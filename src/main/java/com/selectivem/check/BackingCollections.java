@@ -604,12 +604,12 @@ class BackingCollections {
 
             switch (tableSize) {
             case 16:
-                int h256 = hashTo256bit(hash);
-                return (h256 & 0xf) ^ (h256 >> 8 & 0xf);
+                int h8 = hashTo8bit(hash);
+                return (h8 & 0xf) ^ (h8 >> 4 & 0xf);
             case 64:
                 return (hash & 0x3f) ^ (hash >> 6 & 0x3f) ^ (hash >> 12 & 0x3f) ^ (hash >> 18 & 0x3f) ^ (hash >> 24 & 0xf) ^ (hash >> 28 & 0xf);
             case 256:
-                return hashTo256bit(hash);
+                return hashTo8bit(hash);
             case 1024:
                 return (hash & 0x3ff) ^ (hash >> 10 & 0x3ff) ^ (hash >> 20 & 0x3ff) ^ (hash >> 30 & 0x3);
             default:
@@ -617,7 +617,7 @@ class BackingCollections {
             }
         }
 
-        final static int hashTo256bit(int hash) {
+        final static int hashTo8bit(int hash) {
             return (hash & 0xff) ^ (hash >> 8 & 0xff) ^ (hash >> 16 & 0xff) ^ (hash >> 24 & 0xff);
         }
 
