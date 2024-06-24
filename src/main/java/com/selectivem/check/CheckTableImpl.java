@@ -1577,15 +1577,7 @@ class CheckTableImpl {
                 throw new IllegalArgumentException("Invalid row: " + row);
             }
 
-            for (int columnIndex = 0; columnIndex < columnCount; columnIndex++) {
-                int i = tableIndex(rowIndex, columnIndex);
-
-                if (!this.table[i]) {
-                    return false;
-                }
-            }
-
-            return true;
+            return isRowCompleted(rowIndex);
         }
 
         @Override
@@ -1596,15 +1588,7 @@ class CheckTableImpl {
                 throw new IllegalArgumentException("Invalid column: " + column);
             }
 
-            for (int rowIndex = 0; rowIndex < rowCount; rowIndex++) {
-                int i = tableIndex(rowIndex, columnIndex);
-
-                if (!this.table[i]) {
-                    return false;
-                }
-            }
-
-            return true;
+            return isColumnCompleted(columnIndex);
         }
 
         @Override
@@ -1658,9 +1642,11 @@ class CheckTableImpl {
         }
 
         private boolean isRowCompleted(int rowIndex) {
-            for (int columnIndex = 0; columnIndex < columnCount; columnIndex++) {
-                int i = tableIndex(rowIndex, columnIndex);
+            int start = tableIndex(rowIndex, 0);
+            int end = tableIndex(rowIndex, columnCount - 1);
+            int inc = this.rowCount;
 
+            for (int i = start; i <= end; i += inc) {
                 if (!this.table[i]) {
                     return false;
                 }
@@ -1670,9 +1656,10 @@ class CheckTableImpl {
         }
 
         private boolean isColumnCompleted(int columnIndex) {
-            for (int rowIndex = 0; rowIndex < rowCount; rowIndex++) {
-                int i = tableIndex(rowIndex, columnIndex);
+            int start = tableIndex(0, columnIndex);
+            int end = tableIndex(rowCount - 1, columnIndex);
 
+            for (int i = start; i <= end; i++) {
                 if (!this.table[i]) {
                     return false;
                 }
