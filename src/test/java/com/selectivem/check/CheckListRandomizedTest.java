@@ -77,10 +77,8 @@ public class CheckListRandomizedTest {
 
         CheckList<String> subject = CheckList.create(elements);
         Set<String> reference = new HashSet<>();
-        List<Set<String>> history = new ArrayList<>();
 
         for (int i = 0; i < Math.min(100, elementsList.size()); i++) {
-            history.add(subject.getCheckedElements());
             String element = elementsList.get(i);
 
             boolean checkResult = subject.check(element);
@@ -96,7 +94,7 @@ public class CheckListRandomizedTest {
             Assert.assertEquals(reference, checked);
 
             Assert.assertTrue(subject.getUncheckedElements().toString(),
-                    !subject.getUncheckedElements().stream().anyMatch(e -> subject.getCheckedElements().contains(e)));
+                    subject.getUncheckedElements().stream().noneMatch(e -> subject.getCheckedElements().contains(e)));
             Assert.assertEquals(elements.size(), subject.getCheckedElements().size() + subject.getUncheckedElements().size());
 
             Set<String> unchecked = new HashSet<>();
@@ -118,7 +116,6 @@ public class CheckListRandomizedTest {
         int toUncheck = random.nextInt(checkedElements.size());
 
         for (int i = 0; i < toUncheck; i++) {
-            history.add(subject.getCheckedElements());
             String element = checkedElements.get(i);
 
             subject.uncheck(element);
@@ -136,7 +133,6 @@ public class CheckListRandomizedTest {
         }
 
         for (int i = 90; i < Math.min(200, elementsList.size()); i++) {
-            history.add(subject.getCheckedElements());
             String element = elementsList.get(i);
 
             boolean checkResult = subject.check(element);
@@ -162,7 +158,6 @@ public class CheckListRandomizedTest {
         toUncheck = random.nextInt(checkedElements.size());
 
         for (int i = 0; i < toUncheck; i++) {
-            history.add(subject.getCheckedElements());
             String element = checkedElements.get(i);
 
             subject.uncheck(element);
@@ -176,7 +171,6 @@ public class CheckListRandomizedTest {
         }
 
         for (int i = 0; i < elementsList.size(); i++) {
-            history.add(subject.getCheckedElements());
             String element = elementsList.get(i);
 
             boolean checkResult = subject.check(element);
@@ -197,7 +191,6 @@ public class CheckListRandomizedTest {
         Collections.shuffle(elementsList, random);
 
         CheckList<String> subject = CheckList.create(elements);
-        Set<String> reference = new HashSet<>();
 
         subject.checkIf(e -> e.contains("7"));
         Set<String> expected = elements.stream().filter(e -> e.contains("7")).collect(Collectors.toSet());

@@ -77,9 +77,6 @@ public class BackingCollectionsTest {
                 HashSet<String> reference = new HashSet<>();
                 BackingCollections.IndexedUnmodifiableSet.InternalBuilder<String> subject = BackingCollections.IndexedUnmodifiableSet
                         .builder(10);
-                HashSet<String> addedInRound1 = new HashSet<>();
-                HashSet<String> addedInRound2 = new HashSet<>();
-                HashSet<String> addedInRound3 = new HashSet<>();
 
                 int size = random.nextInt(100) + 4;
 
@@ -88,7 +85,6 @@ public class BackingCollectionsTest {
 
                     reference.add(string);
                     subject = subject.with(string);
-                    addedInRound1.add(string);
                 }
 
                 assertEquals(reference, subject);
@@ -100,7 +96,6 @@ public class BackingCollectionsTest {
 
                     reference.add(string);
                     subject = subject.with(string);
-                    addedInRound2.add(string);
                     assertEquals(reference, subject);
                 }
 
@@ -111,9 +106,7 @@ public class BackingCollectionsTest {
 
                     reference.add(string);
                     subject = subject.with(string);
-                    addedInRound3.add(string);
                     assertEquals(reference, subject);
-
                 }
 
                 assertEquals(reference, subject);
@@ -308,13 +301,13 @@ public class BackingCollectionsTest {
 
                 Object[] subjectArray = subject.toArray();
                 Assert.assertEquals(reference,
-                        new HashSet<String>(Arrays.asList(subjectArray).stream().map((e) -> e.toString()).collect(Collectors.toSet())));
+                        new HashSet<>(Arrays.asList(subjectArray).stream().map((e) -> e.toString()).collect(Collectors.toSet())));
 
                 String[] subjectStringArray = subject.toArray(new String[0]);
-                Assert.assertEquals(reference, new HashSet<String>(Arrays.asList(subjectStringArray)));
+                Assert.assertEquals(reference, new HashSet<>(Arrays.asList(subjectStringArray)));
 
                 String[] subjectStringArray2 = subject.toArray(new String[subject.size()]);
-                Assert.assertEquals(reference, new HashSet<String>(Arrays.asList(subjectStringArray2)));
+                Assert.assertEquals(reference, new HashSet<>(Arrays.asList(subjectStringArray2)));
             }
 
             @Test

@@ -42,21 +42,25 @@ import java.util.function.Predicate;
 class CheckTableImpl {
 
     static <R, C> CheckTable<R, C> create(R row, Set<C> columns) {
-        if (columns.size() == 0) {
+        int columnsSize = columns.size();
+
+        if (columnsSize == 0) {
             throw new IllegalArgumentException("Must contain at least one column");
-        } else if (columns.size() == 1) {
-            return new CheckTableImpl.SingleCellCheckTable<R, C>(row, columns.iterator().next(), BackingCollections.IndexedUnmodifiableSet.of(row),
+        } else if (columnsSize == 1) {
+            return new CheckTableImpl.SingleCellCheckTable<>(row, columns.iterator().next(), BackingCollections.IndexedUnmodifiableSet.of(row),
                     BackingCollections.IndexedUnmodifiableSet.of(columns));
         } else {
-            return new CheckTableImpl.SingleRowCheckTable<R, C>(row, columns);
+            return new CheckTableImpl.SingleRowCheckTable<>(row, columns);
         }
     }
 
     static <R, C> CheckTable<R, C> create(Set<R> rows, C column) {
-        if (rows.size() == 0) {
+        int rowsSize = rows.size();
+
+        if (rowsSize == 0) {
             throw new IllegalArgumentException("Must contain at least one row");
-        } else if (rows.size() == 1) {
-            return new CheckTableImpl.SingleCellCheckTable<R, C>(rows.iterator().next(), column, BackingCollections.IndexedUnmodifiableSet.of(rows),
+        } else if (rowsSize == 1) {
+            return new CheckTableImpl.SingleCellCheckTable<>(rows.iterator().next(), column, BackingCollections.IndexedUnmodifiableSet.of(rows),
                     BackingCollections.IndexedUnmodifiableSet.of(column));
         } else {
             return new CheckTableImpl.SingleColumnCheckTable<R, C>(rows, column);
@@ -64,17 +68,20 @@ class CheckTableImpl {
     }
 
     static <R, C> CheckTable<R, C> create(Set<R> rows, Set<C> columns) {
-        if (rows.size() == 0 || columns.size() == 0) {
+        int rowsSize = rows.size();
+        int columnsSize = columns.size();
+
+        if (rowsSize == 0 || columnsSize == 0) {
             throw new IllegalArgumentException("Must contain at least one column and at least one row (got " + rows + "/" + columns + ")");
-        } else if (rows.size() == 1) {
-            if (columns.size() == 1) {
-                return new CheckTableImpl.SingleCellCheckTable<R, C>(rows.iterator().next(), columns.iterator().next(),
+        } else if (rowsSize == 1) {
+            if (columnsSize == 1) {
+                return new CheckTableImpl.SingleCellCheckTable<>(rows.iterator().next(), columns.iterator().next(),
                         BackingCollections.IndexedUnmodifiableSet.of(rows), BackingCollections.IndexedUnmodifiableSet.of(columns));
             } else {
-                return new CheckTableImpl.SingleRowCheckTable<R, C>(rows.iterator().next(), columns);
+                return new CheckTableImpl.SingleRowCheckTable<>(rows.iterator().next(), columns);
             }
-        } else if (columns.size() == 1) {
-            return new CheckTableImpl.SingleColumnCheckTable<R, C>(rows, columns.iterator().next());
+        } else if (columnsSize == 1) {
+            return new CheckTableImpl.SingleColumnCheckTable<>(rows, columns.iterator().next());
         } else {
             return new CheckTableImpl.ArrayCheckTable<>(rows, columns);
         }
@@ -109,7 +116,7 @@ class CheckTableImpl {
                 checked = true;
             }
 
-            return checked;
+            return true;
         }
 
         @Override

@@ -89,11 +89,11 @@ class BackingCollections {
 
     abstract static class IndexedUnmodifiableSet<E> extends UnmodifiableSet<E> implements Set<E> {
         static <E> IndexedUnmodifiableSet<E> of(E e1) {
-            return new OneElementSet<E>(e1);
+            return new OneElementSet<>(e1);
         }
 
         static <E> IndexedUnmodifiableSet<E> of(E e1, E e2) {
-            return new TwoElementSet<E>(e1, e2);
+            return new TwoElementSet<>(e1, e2);
         }
 
         static <E> IndexedUnmodifiableSet<E> of(Set<E> set) {
@@ -110,7 +110,7 @@ class BackingCollections {
                 return new ArrayBackedSet<>(set);
             } else {
                 if (size <= 800) {
-                    InternalBuilder<E> internalBuilder = new HashArrayBackedSet.Builder<E>(
+                    InternalBuilder<E> internalBuilder = new HashArrayBackedSet.Builder<>(
                             size <= 8 ? 16 : size <= 40 ? 64 : size < 200 ? 256 : 1024, size);
 
                     for (E e : set) {
@@ -119,16 +119,16 @@ class BackingCollections {
 
                     return internalBuilder.build();
                 } else {
-                    return new SetBackedSet.Builder<E>(set).build();
+                    return new SetBackedSet.Builder<>(set).build();
                 }
             }
         }
 
         static <E> InternalBuilder<E> builder(int size) {
             if (size <= 800) {
-                return new HashArrayBackedSet.Builder<E>(size <= 10 ? 16 : size <= 50 ? 64 : size < 200 ? 256 : 1024, size);
+                return new HashArrayBackedSet.Builder<>(size <= 10 ? 16 : size <= 50 ? 64 : size < 200 ? 256 : 1024, size);
             } else {
-                return new SetBackedSet.Builder<E>(size);
+                return new SetBackedSet.Builder<>(size);
             }
         }
 
@@ -435,7 +435,7 @@ class BackingCollections {
                         throw new NoSuchElementException();
                     }
 
-                    E element = (E) elements[i];
+                    E element = elements[i];
                     i++;
                     return element;
                 }
@@ -744,7 +744,7 @@ class BackingCollections {
                 if (size == 0) {
                     return IndexedUnmodifiableSet.empty();
                 } else if (size == 1) {
-                    return new OneElementSet<E>(this.flat[0]);
+                    return new OneElementSet<>(this.flat[0]);
                 } else if (size == 2) {
                     return new TwoElementSet<>(this.flat[0], this.flat[1]);
                 } else {
@@ -908,7 +908,7 @@ class BackingCollections {
         }
 
         static class Builder<E> extends InternalBuilder<E> {
-            private HashMap<E, Integer> delegate;
+            private final HashMap<E, Integer> delegate;
             private E [] flat;
 
             Builder(int expectedCapacity) {
@@ -980,7 +980,7 @@ class BackingCollections {
 
             @Override
             boolean contains(Object o) {
-                return delegate.keySet().contains(o);
+                return delegate.containsKey(o);
             }
 
             private void extendFlat() {
