@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2024 Nils Bandener
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Based on code which is:
- * 
+ *
  * Copyright 2022-2024 floragunn GmbH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,11 +48,11 @@ class CheckListImpl {
 
         if (size == 2) {
             Iterator<E> iter = elements.iterator();
-            return new CheckListImpl.TwoElementCheckList<E>(iter.next(), iter.next(), elementName);
+            return new CheckListImpl.TwoElementCheckList<>(iter.next(), iter.next(), elementName);
         } else if (size >= 800) {
             return new CheckListImpl.HashMapCheckList<>(elements, elementName);
         } else {
-            return new CheckListImpl.ArrayCheckList<E>(elements, elementName);
+            return new CheckListImpl.ArrayCheckList<>(elements, elementName);
         }
     }
 
@@ -284,9 +284,7 @@ class CheckListImpl {
         @Override
         public boolean checkIf(Predicate<E> checkPredicate) {
             for (int i = 0; i < size; i++) {
-                E e = this.elements.indexToElement(i);
-
-                if (!this.checked[i] && checkPredicate.test(e)) {
+                if (!this.checked[i] && checkPredicate.test(this.elements.indexToElement(i))) {
                     this.checked[i] = true;
                     this.uncheckedCount--;
                 }
@@ -298,9 +296,7 @@ class CheckListImpl {
         @Override
         public void uncheckIf(Predicate<E> checkPredicate) {
             for (int i = 0; i < size; i++) {
-                E e = this.elements.indexToElement(i);
-
-                if (this.checked[i] && checkPredicate.test(e)) {
+                if (this.checked[i] && checkPredicate.test(this.elements.indexToElement(i))) {
                     this.checked[i] = false;
                     this.uncheckedCount++;
                 }
@@ -309,19 +305,13 @@ class CheckListImpl {
 
         @Override
         public void checkAll() {
-            for (int i = 0; i < size; i++) {
-                this.checked[i] = true;
-            }
-
+            Arrays.fill(this.checked, true);
             this.uncheckedCount = 0;
         }
 
         @Override
         public void uncheckAll() {
-            for (int i = 0; i < size; i++) {
-                this.checked[i] = false;
-            }
-
+            Arrays.fill(this.checked, false);
             this.uncheckedCount = this.size;
         }
 
@@ -405,7 +395,7 @@ class CheckListImpl {
                                     throw new NoSuchElementException();
                                 }
 
-                                E element = (E) ArrayCheckList.this.elements.indexToElement(pos);
+                                E element = ArrayCheckList.this.elements.indexToElement(pos);
                                 ready = false;
                                 return element;
                             }
@@ -470,7 +460,7 @@ class CheckListImpl {
                                     throw new NoSuchElementException();
                                 }
 
-                                E element = (E) ArrayCheckList.this.elements.indexToElement(pos);
+                                E element = ArrayCheckList.this.elements.indexToElement(pos);
                                 this.pos = findNext(this.pos + 1);
                                 return element;
                             }
@@ -523,7 +513,7 @@ class CheckListImpl {
                                     throw new NoSuchElementException();
                                 }
 
-                                E element = (E) ArrayCheckList.this.elements.indexToElement(pos);
+                                E element = ArrayCheckList.this.elements.indexToElement(pos);
                                 this.pos = findNext(this.pos + 1);
                                 return element;
                             }
@@ -573,7 +563,7 @@ class CheckListImpl {
                                     throw new NoSuchElementException();
                                 }
 
-                                E element = (E) ArrayCheckList.this.elements.indexToElement(pos);
+                                E element = ArrayCheckList.this.elements.indexToElement(pos);
                                 this.pos = findNext(this.pos + 1);
                                 return element;
                             }
