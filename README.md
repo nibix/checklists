@@ -3,6 +3,8 @@
 # checklists
 Dedicated check list and check table data structures for Java.
 
+**This is now part of [com.selectivem.collections](https://github.com/nibix/collections). Please see there.
+
 Check lists and check tables take a set of items as input; initially, all items will be marked as unchecked.
 You can then use the various methods to mark individual items as checked. Further methods allow you to check
 whether your check list or check table is complete - and when not, what is missing.
